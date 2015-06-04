@@ -1,0 +1,67 @@
+extends layout
+
+block content
+  h3#note
+  form#site-form
+    input#site-host(type='text' placeholder="site host")
+    input#site-port(type='text' placeholder="site port")
+    input(type='submit' value='Connect to Site')
+  div(style='height: 40px; width: 60px')
+  button#show-controls Show Site Controls
+  div(style='height: 10px;')
+  div(style='background-color: #D0E0D0; padding: 5px;')
+    h2#site-title-1
+    div(style='left-margin: 5px')#controls-html-1
+  div(style='background-color: #E0D0D0; padding: 5px;')
+    h2#site-title-2
+    div(style='left-margin: 5px')#controls-html-2
+
+  script.
+    $(function() {
+      var socket = io();
+      var host = '';
+      var port = '';
+      var path = '';
+      var notice = '';
+      var counter = 0;
+
+      socket.on('urls', function(data) {
+      });
+
+      socket.on('notice', function(n) {
+        notice = n;
+        $("#note").html(notice);
+      });
+
+      $("#site-form").submit(function(event) {
+        host = $("#site-host").val();
+        port = $('#site-port').val();
+      	path = "http://" + host + ':' + port;
+      	$("#site-host").val('');
+        $('#site-port').val('');
+
+        //emit to socket 
+        socket.emit('url:add', {host: host, port: port ,path: path});
+        notice = notice + '<br>' + "Listening to " + path;
+        socket.emit('notice', notice);
+        $("#note").html(notice);
+
+        $.post(window.location.href, {host: host, port: port ,path: path});
+        counter++;
+      	return false;
+      });
+
+      $('#show-controls').click(function(event) {
+        $.get(window.location.href + 'controls')
+          .success(function(data){
+            if(counter == 1) {
+              $('#site-title-1').text(data.name);
+              $('#controls-html-1').html(data.html);
+            } else if (counter == 2) {
+              $('#site-title-2').text(data.name);
+              $('#controls-html-2').html(data.html);
+            }
+          });
+      });
+
+    });
