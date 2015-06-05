@@ -1,9 +1,11 @@
 var express = require('express');
 var router = express.Router();
 
-var io = require('socket.io')();
+var io = require('socket.io');
 var http = require('http');
 var data = {};
+var domain = '';
+
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
@@ -12,6 +14,7 @@ router.get('/', function(req, res, next) {
 
 /* POST home page */
 router.post('/', function(req, res, next) {
+  domain = req.body.path
   var path = req.body.path + '/site-controller';
   console.log("SUBMITTED PATH: " + path);
   var options = {
@@ -42,22 +45,34 @@ router.get('/controls', function(req, res, next) {
   for(i = 0; i < data.controls.length; i++) {
     if(data.controls[i].type == 'input') {
       control_html = control_html + writeInputH(data.controls[i].name);
-    } else {
-      control_html = control_html + writeH(data.controls[i].name);
+    } else if (data.controls[i].type == 'button') {
+      control_html = control_html + writeButH(data.controls[i].name);
+    } else if (data.controls[i].type == 'form') {
+      control_html = control_html + writeFormH(data.controls[i].name);
     }
     control_html = control_html + '</p> <p>';
   }
-  console.log("html is...");
-  console.log(control_html);
   res.send({name : data.name, html : control_html});
+
+  //connect to site's socket io
+  getIo2();
+
 });
 
 function writeInputH(name) {
   return name + ": <input type='text'> </input>";
 }
 
-function writeH(name) {
+function writeButH(name) {
   return "<button>" + name + "</button>";
+}
+
+function writeFormH(name) {
+  var retH = "<form >"
+}
+
+function getIo2() {
+  var socket2 = require('socket.io-client')('http://localhost:3000');
 }
 
 module.exports = router;
